@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Weather + AQI Forecast App — Python Requirements
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# IMPORTANT — PyTorch for RTX 5050 (Blackwell, CUDA 12.8):
+#
+#   pip install torch torchvision torchaudio \
+#       --index-url https://download.pytorch.org/whl/cu128
+#
+#   If the above doesn't detect your GPU, use nightly:
+#   pip install --pre torch torchvision torchaudio \
+#       --index-url https://download.pytorch.org/whl/nightly/cu128
+#
+#   Verify: python -c "import torch; print(torch.cuda.get_device_name(0))"
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Web framework
+Flask==3.0.3
+gunicorn==22.0.0
+
+# Data & ML
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.0
+joblib==1.4.2
+openpyxl==3.1.2        # for reading .xlsx files
+
+# PyTorch — install separately (see comment above)
+# torch>=2.3.0
+
+# Visualisation
+matplotlib==3.9.0
+seaborn==0.13.2
+
+# Optional utilities
+python-dateutil==2.9.0

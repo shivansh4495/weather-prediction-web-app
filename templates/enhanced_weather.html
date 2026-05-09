@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Weather Forecasting App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        #map {
+            height: 500px;
+            width: 100%;
+            border: 1px solid #333;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border: 1px solid #333;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #e9f7fc;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #008cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #005f8a;
+        }
+        .chart-container {
+            margin: 20px 0;
+            height: 400px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .error {
+            color: #d9534f;
+            background-color: #f2dede;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ebccd1;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Enhanced Weather Forecasting System</h1>
+
+<div id="map"></div>
+
+<div id="map"></div>
+
+    <div class="controls">
+        <button onclick="getNoidaWeather()">Get Weather for Noida</button>
+        <button onclick="loadYearlyAnalysis()">Load Yearly Analysis</button>
+        <button onclick="load30DayComparison()">Load 30-Day Comparison</button>
+        <button onclick="loadImprovedPredictions()">Load Improved Predictions</button>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">
+        Loading data...
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="chart" class="chart-container">
+        <canvas id="weatherChart"></canvas>
+    </div>
+
+    <div id="imageContainer" style="text-align:center;">
+        <img id="weatherImage" src="" alt="Weather Visualization" style="max-width: 100%; height: auto; display: none;">
+    </div>
+
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const weatherChartCtx = document.getElementById('weatherChart').getContext('2d');
+    const weatherImageEl = document.getElementById('weatherImage');
+    
+    function initMap() {
+        const noida = { lat: 28.5355, lng: 77.3910 };
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10,
+            center: noida,
+        });
+
+        const marker = new google.maps.Marker({
+            position: noida,
+            map: map,
+            title: 'Noida, Uttar Pradesh'
+        });
+    }
+
+    function getNoidaWeather() {
+        showLoading(true);
+        fetch('/api/noida-weather')
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    const forecast = data.forecast;
+                    alert(`7-Day Forecast for Noida: \n${forecast.map(day => day.date + ' - Temp: ' + day.temperature + ', Rainfall: ' + day.rainfall).join('\n')}`);
+                } else {
+                    displayError('Failed to fetch Noida weather');
+                }
+            })
+            .catch(error => {
+                displayError('Error fetching Noida weather: ' + error.message);
+            })
+            .finally(() => {
+                showLoading(false);
+            });
+    }
+    
+    function initMap() {
+        const noida = { lat: 28.5355, lng: 77.3910 };
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10,
+            center: noida,
+        });
+
+        const marker = new google.maps.Marker({
+            position: noida,
+            map: map,
+            title: 'Noida, Uttar Pradesh'
+        });
+    }
+
+    function getNoidaWeather() {
+        showLoading(true);
+        fetch('/api/noida-weather')
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    const forecast = data.forecast;
+                    alert(`7-Day Forecast for Noida: \n${forecast.map(day => day.date + ' - Temp: ' + day.temperature + ', Rainfall: ' + day.rainfall).join('\n')}`);
+                } else {
+                    displayError('Failed to fetch Noida weather');
+                }
+            })
+            .catch(error => {
+                displayError('Error fetching Noida weather: ' + error.message);
+            })
+            .finally(() => {
+                showLoading(false);
+            });
+    }
+
+    function displayError(message) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        setTimeout(() => {
+            errorEl.style.display = 'none';
+        }, 5000);
+    }
+
+    function showLoading(isLoading) {
+        loadingEl.style.display = isLoading ? 'block' : 'none';
+    }
+
+    async function loadYearlyAnalysis() {
+        showLoading(true);
+        try {
+            const response = await fetch('/api/yearly-analysis');
+            if (response.ok) {
+                const data = await response.json();
+                weatherImageEl.src = data.image;
+                weatherImageEl.style.display = 'block';
+                document.getElementById('chart').style.display = 'none';
+                weatherImageEl.style.display = 'block';
+            } else {
+                displayError('Error loading yearly analysis');
+            }
+        } catch (error) {
+            displayError('Error: ' + error.message);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function load30DayComparison() {
+        showLoading(true);
+        try {
+            const response = await fetch('/api/30-day-comparison');
+            if (response.ok) {
+                const data = await response.json();
+                weatherImageEl.src = data.image;
+                weatherImageEl.style.display = 'block';
+                document.getElementById('chart').style.display = 'none';
+                weatherImageEl.style.display = 'block';
+            } else {
+                displayError('Error loading 30-day comparison');
+            }
+        } catch (error) {
+            displayError('Error: ' + error.message);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function loadImprovedPredictions() {
+        showLoading(true);
+        try {
+            const response = await fetch('/api/improved-predictions');
+            if (response.ok) {
+                const data = await response.json();
+                const forecast = data.predictions;
+
+                const weatherChart = new Chart(weatherChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: forecast.hours,
+                        datasets: [{
+                            label: 'Predicted Temperature (°C)',
+                            data: forecast.temperatures,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Improved Weather Predictions (Next 168 Hours)'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Hours'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (°C)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                weatherImageEl.style.display = 'none';
+                document.getElementById('chart').style.display = 'block';
+
+            } else {
+                displayError('Error loading improved predictions');
+            }
+        } catch (error) {
+            displayError('Error: ' + error.message);
+        } finally {
+            showLoading(false);
+        }
+    }
+</script>
+
+</body>
+</html>
+

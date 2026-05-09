@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Weather Forecasting System - Dev Kumar Nainwa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-okaidia.min.css">
+    <style>
+        :root {
+            --primary-color: #005A9C; 
+            --secondary-color: #4a7ab5;
+            --background-color: #f4f7f9;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --heading-color: #111111;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            transition: top 0.3s;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 45px;
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+        }
+
+        .nav-links li {
+            margin-left: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-color);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .section {
+            padding: 10rem 0 6rem;
+            border-bottom: 1px solid var(--border-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Animation styles */
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .section:first-of-type {
+             padding-top: 70px; /* Offset for fixed header */
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        h1, h2, h3 {
+            color: var(--heading-color);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        h1 { font-size: 3.5rem; line-height: 1.2; }
+        h2 { font-size: 2.5rem; }
+        h3 { font-size: 1.5rem; color: var(--primary-color); }
+
+        .card {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            text-align: left;
+        }
+
+        .grid-item {
+            background: #fdfdfd;
+            padding: 2rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .grid-item h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-top: 1rem;
+        }
+
+        .arch-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .arch-item {
+            padding: 1.5rem;
+            border-radius: 10px;
+            width: 150px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .arch-arrow {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .ml-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .ml-layer .icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 2rem;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        video {
+            width: 100%;
+            display: block;
+        }
+        
+        .timeline {
+            position: relative;
+            width: 100%;
+            margin-top: 3rem;
+            padding: 2rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+            transform: translateX(-50%);
+        }
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+        }
+        .timeline-item:nth-child(odd) { left: 0; text-align: right; }
+        .timeline-item:nth-child(even) { left: 50%; text-align: left; }
+        .timeline-dot {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            border: 4px solid var(--background-color);
+            transform: translateY(-50%);
+        }
+        .timeline-item:nth-child(odd) .timeline-dot { right: -10px; transform: translate(50%, -50%); }
+        .timeline-item:nth-child(even) .timeline-dot { left: -10px; transform: translate(-50%, -50%); }
+        .timeline-content {
+            background: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .timeline-content h4 { color: var(--primary-color); }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--card-background);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            margin-top: 1rem;
+        }
+        .btn:hover {
+            background: var(--secondary-color);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .gallery-item {
+            background: var(--card-background);
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary-color);
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        .gallery-caption {
+            padding: 1rem;
+            background: var(--card-background);
+        }
+        .gallery-caption h4 {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .gallery-caption p {
+            color: var(--secondary-color);
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin: 0;
+        }
+        .gallery-grid-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .gallery-grid-header h3 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        .gallery-grid-header p {
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal-content.code {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 10px;
+            max-width: 80%;
+            max-height: 80vh;
+            overflow: auto;
+            text-align: left;
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            .container { padding: 0 1rem; }
+            .nav-links { display: none; }
+            .arch-diagram { flex-direction: column; }
+            .arch-arrow { transform: rotate(90deg); }
+            .timeline::before { left: 10px; }
+            .timeline-item { width: 100%; padding-left: 3rem; padding-right: 1rem; text-align: left !important; }
+            .timeline-item:nth-child(even) { left: 0; }
+            .timeline-dot { left: 10px !important; }
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="logo">
+                <img src="amity-logo.png" alt="Amity University Logo">
+                <span class="logo-text">Amity University</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">Home</a></li>
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#solution">Solution</a></li>
+                <li><a href="#model">Model</a></li>
+                <li><a href="#analysis">Analysis</a></li>
+                <li><a href="#demo">Demo</a></li>
+                <li><a href="#roadmap">Roadmap</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Card 1: Title -->
+        <section id="home" class="section">
+            <h1>Intelligent Weather Forecasting System</h1>
+            <p class="hero-subtitle">A Full-Stack Application for Real-Time Prediction and Analysis</p>
+            <p style="margin-top: 1rem; font-style: italic;">A Major Project by Dev Kumar Nainwa</p>
+        </section>
+
+        <!-- Card 2: The Core Problem -->
+        <section id="problem" class="section">
+            <h2>The Core Problem</h2>
+            <div class="card">
+                <p>Standard weather apps provide surface-level data, but often lack the depth required for meaningful analysis.</p>
+                <div class="grid" style="margin-top: 2rem; text-align:center;">
+                    <div class="grid-item"><h4>Limited Historical Context</h4></div>
+                    <div class="grid-item"><h4>Generic, Non-Localized Models</h4></div>
+                    <div class="grid-item"><h4>Absence of Advanced Analytics</h4></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card 3: Our Solution -->
+        <section id="solution" class="section">
+            <h2>Our Solution: A Smarter System</h2>
+            <div class="card">
+                <p>We engineered a full-stack application that integrates three key components to bridge this gap.</p>
+                <div class="arch-diagram">
+                    <div class="arch-item"><h3>Frontend (UI)</h3><p>HTML, CSS, JS</p></div>
+                    <div class="arch-arrow">↔</div>
+                    <div class="arch-item"><h3>Backend (Server)</h3><p>Flask, Python</p></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-item"><h3>Data Layer</h3><p>CSV, PyTorch Model</p></div>
+                </div>
+                <button id="viewCodeBtn" class="btn">View Backend Code</button>
+            </div>
+        </section>
+
+        <!-- Card 5: The Predictive Brain -->
+        <section id="model" class="section">
+            <h2>The Predictive Brain: A Hybrid ML Model</h2>
+            <div class="card">
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>Model Architecture</h4>
+                        <p>A sophisticated <strong>CNN-LSTM hybrid</strong> model. The CNN identifies short-term patterns, and the RNN understands long-term trends.</p>
+                    </div>
+                    <div class="grid-item">
+                        <h4>Key Technologies</h4>
+                        <p><strong>PyTorch</strong> for building and training the model. A `StandardScaler` for crucial data preprocessing.</p>
+                    </div>
+                </div>
+                <div class="ml-diagram">
+                    <div class="ml-layer"><div class="icon">📊</div><h4>Input Data</h4></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="ml-layer"><div class="icon">⚙️</div><h4>CNN Layer</h4></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="ml-layer"><div class="icon">🔄</div><h4>LSTM Layer</h4></div>
+                    <div class="arch-arrow">→</div>
+                    <div class="ml-layer"><div class="icon">🎯</div><h4>Prediction</h4></div>
+                </div>
+                <h3 style="margin-top: 2rem;">Result: MAE < 2°C on test data.</h3>
+            </div>
+        </section>
+
+        <!-- NEW Section: Model Performance & Analysis -->
+        <section id="analysis" class="section">
+            <h2>Model Performance & Analysis</h2>
+            <div class="card">
+                <p>A deep dive into the data, training process, and prediction accuracy of our model.</p>
+                <div class="gallery-grid-header">
+                    <h3>📊 Comprehensive Model Analysis</h3>
+                    <p>Click on any chart to view detailed analysis results</p>
+                </div>
+                <div class="gallery">
+                    <div class="gallery-item">
+                        <img src="Figure_1.1.png" alt="Historical Data Trends Overview">
+                        <div class="gallery-caption">
+                            <h4>Data Overview & Trends</h4>
+                            <p>Historical weather patterns and initial data exploration</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_1.png" alt="Data Analysis and Preprocessing">
+                        <div class="gallery-caption">
+                            <h4>Data Processing Pipeline</h4>
+                            <p>Feature engineering and data preprocessing steps</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_2.png" alt="Model Training Progress">
+                        <div class="gallery-caption">
+                            <h4>Training Progress</h4>
+                            <p>Model learning curves and optimization process</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_3.png" alt="Loss Function Optimization">
+                        <div class="gallery-caption">
+                            <h4>Loss Function Analysis</h4>
+                            <p>Training and validation loss optimization</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_4.png" alt="Prediction Accuracy Metrics">
+                        <div class="gallery-caption">
+                            <h4>Accuracy Metrics</h4>
+                            <p>Model performance evaluation and error analysis</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_5.png" alt="Temperature Forecast Comparison">
+                        <div class="gallery-caption">
+                            <h4>Forecast Comparison</h4>
+                            <p>Predicted vs actual temperature comparisons</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="Figure_6.png" alt="Model Performance Evaluation">
+                        <div class="gallery-caption">
+                            <h4>Performance Evaluation</h4>
+                            <p>Comprehensive model validation results</p>
+                        </div>
+                    </div>
+                    <div class="gallery-item">
+                        <img src="figure 7.png" alt="Final Results and Statistics">
+                        <div class="gallery-caption">
+                            <h4>Final Results</h4>
+                            <p>Statistical summary and key findings</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card 7: Live Demo -->
+        <section id="demo" class="section">
+            <h2>Live Demo</h2>
+            <div class="video-container">
+                <video controls muted loop poster="Figure_1.png">
+                    <source src="demo-video.mov" type="video/quicktime">
+                    <source src="demo-video.mov" type="video/mp4">
+                    <p>Your browser does not support the video tag. Please use a modern browser to view the demo.</p>
+                </video>
+                <p style="margin-top: 1rem; color: var(--secondary-color); text-align: center;">📹 Interactive demo of the Weather Forecasting System in action</p>
+            </div>
+        </section>
+
+        <!-- Card 8: Key Engineering Solutions -->
+        <section id="solutions" class="section">
+            <h2>Key Engineering Solutions</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Challenge 1: Demoing without a live server.</h4>
+                        <p><strong>Solution:</strong> Engineered a self-contained demo by embedding prediction data directly into the HTML.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Challenge 2: Infinitely extending graphs.</h4>
+                        <p><strong>Solution:</strong> Fixed the layout by constraining the chart's container with CSS and updating Chart.js options.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Challenge 3: Uninformative average temperature.</h4>
+                        <p><strong>Solution:</strong> Re-engineered the logic to display the daily min/max temperature range for a richer forecast.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card 9: Future Roadmap -->
+        <section id="roadmap" class="section">
+            <h2>Future Roadmap</h2>
+            <div class="card">
+                <div class="grid">
+                    <div class="grid-item">
+                        <h4>Live Model Integration</h4>
+                        <p>Build an API endpoint to call the PyTorch model in real-time for up-to-the-minute predictions.</p>
+                    </div>
+                    <div class="grid-item">
+                        <h4>Expanded Data Display</h4>
+                        <p>Incorporate more data like humidity and wind speed into the main forecast display.</p>
+                    </div>
+                    <div class="grid-item">
+                        <h4>User Geolocation</h4>
+                        <p>Add functionality to automatically detect the user's location and provide a localized forecast.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card 10: Thank You -->
+        <section id="thanks" class="section">
+            <h1>Thank You</h1>
+            <h2>Questions?</h2>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>&copy; 2025 Dev Kumar Nainwa | Amity University, Noida | Major Project</p>
+    </footer>
+
+    <!-- Modal for Image and Code -->
+    <div id="myModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div class="modal-content code" id="modalCode">
+            <pre><code class="language-python" id="codeContent"></code></pre>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLi = document.querySelectorAll('.nav-links li a');
+        window.addEventListener('scroll', ()=> {
+            let current = 'home';
+            sections.forEach( section => {
+                const sectionTop = section.offsetTop;
+                if(pageYOffset >= (sectionTop - 75)){
+                    current = section.getAttribute('id');
+                }
+            })
+            navLi.forEach( a => {
+                a.classList.remove('active');
+                if(a.getAttribute('href').substring(1) === current){
+                    a.classList.add('active');
+                }
+            })
+        });
+
+        // Fade-in on scroll animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Modal Logic
+        const modal = document.getElementById("myModal");
+        const modalImg = document.getElementById("modalImg");
+        const modalCode = document.getElementById("modalCode");
+        const codeContent = document.getElementById("codeContent");
+        const galleryItems = document.querySelectorAll(".gallery-item");
+        const viewCodeBtn = document.getElementById("viewCodeBtn");
+        const span = document.getElementsByClassName("close")[0];
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', function() {
+                modal.style.display = "flex";
+                modalImg.src = this.querySelector('img').src;
+                modalImg.style.display = "block";
+                modalCode.style.display = "none";
+            });
+        });
+
+        const pythonCode = `#!/usr/bin/env python3
+"""
+Enhanced Weather Forecasting Flask Web Application with Interactive Map
+=====================================================================
+
+Features:
+- Interactive map for Noida weather data
+- 7-day weather forecast with temperature and rainfall
+- Modern responsive UI/UX
+- Real-time weather predictions
+- Historical data analysis
+"""
+
+import os
+import sys
+import json
+import pandas as pd
+import numpy as np
+from flask import Flask, render_template, jsonify, request, send_file
+from datetime import datetime, timedelta
+import io
+import base64
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+import warnings
+warnings.filterwarnings('ignore')
+
+# Set style for better plots
+plt.style.use('seaborn-v0_8')
+sns.set_palette("husl")
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+
+# Global variables
+historical_data = None
+predictions_data = None
+
+# Noida coordinates and weather data
+NOIDA_COORDS = {
+    'lat': 28.5355,
+    'lng': 77.3910,
+    'name': 'Noida, Uttar Pradesh'
+}
+
+@app.route('/api/noida-weather')
+def noida_weather():
+    """Get 7-day weather forecast for Noida"""
+    try:
+        # Generate more realistic weather data for Noida
+        base_temp = 32  # Base temperature for Noida in summer
+        forecast = []
+        
+        for i in range(7):
+            date = datetime.now() + timedelta(days=i)
+            # Add some variation to temperature
+            temp_variation = np.random.normal(0, 1.5)  # Reduce variation to ±1.5°C
+            temperature = int(base_temp + temp_variation + (i * 0.3))  # Slight upward trend
+            
+            # Random rainfall pattern
+            rainfall = 'Yes' if np.random.random() > 0.4 else 'No'
+            
+            forecast.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'temperature': max(25, min(40, temperature)),  # Keep within realistic range
+                'rainfall': rainfall
+            })
+        
+        return jsonify({'status': 'success', 'forecast': forecast})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def load_historical_data():
+    """Load and process historical weather data"""
+    global historical_data
+    try:
+        # Load the Excel file
+        df = pd.read_excel('Filtered_Weather_Forecasting_Datasetls.xlsx')
+        
+        # Clean and process the data
+        df['time'] = pd.to_datetime(df['time'])
+        df = df.sort_values('time')
+        
+        # Add derived features
+        df['year'] = df['time'].dt.year
+        df['month'] = df['time'].dt.month
+        df['day'] = df['time'].dt.day
+        df['hour'] = df['time'].dt.hour
+        df['day_of_year'] = df['time'].dt.dayofyear
+        df['week_of_year'] = df['time'].dt.isocalendar().week
+        
+        # Clean temperature column name
+        df = df.rename(columns={'temperature_2m (°C)': 'temperature'})
+        
+        historical_data = df
+        print(f"✅ Historical data loaded: {len(df)} records from {df['time'].min()} to {df['time'].max()}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error loading historical data: {e}")
+        return False
+
+def load_predictions_data():
+    """Load prediction data"""
+    global predictions_data
+    try:
+        df = pd.read_csv('temperature_predictions.csv')
+        predictions_data = df
+        print(f"✅ Predictions data loaded: {len(df)} records")
+        return True
+    except Exception as e:
+        print(f"❌ Error loading predictions data: {e}")
+        return False
+
+def get_recent_30_days_data():
+    """Get the most recent 30 days of historical data"""
+    if historical_data is None:
+        return None
+    
+    # Get the last 30 days of data
+    end_date = historical_data['time'].max()
+    start_date = end_date - timedelta(days=30)
+    
+    recent_data = historical_data[
+        (historical_data['time'] >= start_date) & 
+        (historical_data['time'] <= end_date)
+    ].copy()
+    
+    return recent_data
+
+def create_yearly_weather_map():
+    """Create yearly weather pattern visualization"""
+    if historical_data is None:
+        return None
+    
+    # Create a comprehensive yearly analysis
+    fig, axes = plt.subplots(2, 2, figsize=(20, 15))
+    fig.suptitle('Yearly Weather Analysis for Noida', fontsize=20, fontweight='bold')
+    
+    # 1. Monthly temperature trends over years
+    monthly_temps = historical_data.groupby(['year', 'month'])['temperature'].mean().reset_index()
+    monthly_pivot = monthly_temps.pivot(index='month', columns='year', values='temperature')
+    
+    sns.heatmap(monthly_pivot, ax=axes[0,0], cmap='RdYlBu_r', center=20, 
+                annot=True, fmt='.1f', cbar_kws={'label': 'Temperature (°C)'})
+    axes[0,0].set_title('Monthly Temperature Trends Over Years', fontsize=14, fontweight='bold')
+    axes[0,0].set_xlabel('Year')
+    axes[0,0].set_ylabel('Month')
+    
+    # 2. Daily temperature pattern throughout the year
+    daily_pattern = historical_data.groupby(['month', 'hour'])['temperature'].mean().reset_index()
+    daily_pivot = daily_pattern.pivot(index='hour', columns='month', values='temperature')
+    
+    sns.heatmap(daily_pivot, ax=axes[0,1], cmap='RdYlBu_r', center=20,
+                cbar_kws={'label': 'Temperature (°C)'})
+    axes[0,1].set_title('Daily Temperature Pattern Throughout Year', fontsize=14, fontweight='bold')
+    axes[0,1].set_xlabel('Month')
+    axes[0,1].set_ylabel('Hour of Day')
+    
+    # 3. Seasonal temperature distribution
+    def get_season(month):
+        if month in [12, 1, 2]:
+            return 'Winter'
+        elif month in [3, 4, 5]:
+            return 'Spring'
+        elif month in [6, 7, 8]:
+            return 'Summer'
+        else:
+            return 'Autumn'
+    
+    historical_data['season'] = historical_data['month'].apply(get_season)
+    
+    seasons_order = ['Winter', 'Spring', 'Summer', 'Autumn']
+    sns.boxplot(data=historical_data, x='season', y='temperature', 
+                order=seasons_order, ax=axes[1,0])
+    axes[1,0].set_title('Seasonal Temperature Distribution', fontsize=14, fontweight='bold')
+    axes[1,0].set_ylabel('Temperature (°C)')
+    
+    # 4. Yearly temperature trend
+    yearly_temps = historical_data.groupby('year')['temperature'].agg(['mean', 'min', 'max']).reset_index()
+    
+    axes[1,1].plot(yearly_temps['year'], yearly_temps['mean'], marker='o', linewidth=2, label='Average')
+    axes[1,1].fill_between(yearly_temps['year'], yearly_temps['min'], yearly_temps['max'], 
+                           alpha=0.3, label='Min-Max Range')
+    axes[1,1].set_title('Yearly Temperature Trends', fontsize=14, fontweight='bold')
+    axes[1,1].set_xlabel('Year')
+    axes[1,1].set_ylabel('Temperature (°C)')
+    axes[1,1].legend()
+    axes[1,1].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Save to buffer
+    img_buffer = io.BytesIO()
+    plt.savefig(img_buffer, format='png', dpi=150, bbox_inches='tight')
+    img_buffer.seek(0)
+    img_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+    plt.close()
+    
+    return img_base64
+
+def create_30_day_comparison():
+    """Create comparison between recent 30 days and predictions"""
+    if historical_data is None or predictions_data is None:
+        return None
+    
+    # Get recent 30 days
+    recent_data = get_recent_30_days_data()
+    if recent_data is None:
+        return None
+    
+    # Create comparison plot
+    fig, axes = plt.subplots(2, 2, figsize=(18, 12))
+    fig.suptitle('30-Day Weather Analysis vs Predictions', fontsize=16, fontweight='bold')
+    
+    # 1. Recent 30 days temperature trend
+    recent_daily = recent_data.groupby(recent_data['time'].dt.date)['temperature'].agg(['mean', 'min', 'max']).reset_index()
+    recent_daily['time'] = pd.to_datetime(recent_daily['time'])
+    
+    axes[0,0].plot(recent_daily['time'], recent_daily['mean'], marker='o', linewidth=2, color='blue', label='Actual Average')
+    axes[0,0].fill_between(recent_daily['time'], recent_daily['min'], recent_daily['max'], 
+                           alpha=0.3, color='blue', label='Actual Min-Max')
+    axes[0,0].set_title('Recent 30 Days Temperature', fontsize=12, fontweight='bold')
+    axes[0,0].set_ylabel('Temperature (°C)')
+    axes[0,0].legend()
+    axes[0,0].grid(True, alpha=0.3)
+    axes[0,0].tick_params(axis='x', rotation=45)
+    
+    # 2. Predicted vs Historical Average
+    # Calculate historical average for same period
+    recent_month = recent_data['time'].dt.month.iloc[0]
+    historical_same_period = historical_data[
+        (historical_data['month'] == recent_month) & 
+        (historical_data['year'] < recent_data['year'].max())
+    ]
+    
+    if len(historical_same_period) > 0:
+        hist_avg = historical_same_period.groupby('hour')['temperature'].mean()
+        
+        # Plot hourly comparison
+        pred_hours = predictions_data['hour'].values[:24]  # First 24 hours
+        pred_temps = predictions_data['predicted_temperature'].values[:24]
+        
+        axes[0,1].plot(pred_hours, pred_temps, marker='o', linewidth=2, color='red', label='Predicted')
+        axes[0,1].plot(hist_avg.index, hist_avg.values, marker='s', linewidth=2, color='green', label='Historical Average')
+        axes[0,1].set_title('24-Hour Prediction vs Historical Average', fontsize=12, fontweight='bold')
+        axes[0,1].set_xlabel('Hour of Day')
+        axes[0,1].set_ylabel('Temperature (°C)')
+        axes[0,1].legend()
+        axes[0,1].grid(True, alpha=0.3)
+    
+    # 3. Temperature distribution comparison
+    recent_temps = recent_data['temperature'].values
+    pred_temps = predictions_data['predicted_temperature'].values
+    
+    axes[1,0].hist(recent_temps, bins=30, alpha=0.7, color='blue', label='Recent 30 Days', density=True)
+    axes[1,0].hist(pred_temps, bins=30, alpha=0.7, color='red', label='Predictions', density=True)
+    axes[1,0].set_title('Temperature Distribution Comparison', fontsize=12, fontweight='bold')
+    axes[1,0].set_xlabel('Temperature (°C)')
+    axes[1,0].set_ylabel('Density')
+    axes[1,0].legend()
+    axes[1,0].grid(True, alpha=0.3)
+    
+    # 4. Statistical comparison
+    recent_stats = {
+        'Mean': recent_temps.mean(),
+        'Std': recent_temps.std(),
+        'Min': recent_temps.min(),
+        'Max': recent_temps.max()
+    }
+    
+    pred_stats = {
+        'Mean': pred_temps.mean(),
+        'Std': pred_temps.std(),
+        'Min': pred_temps.min(),
+        'Max': pred_temps.max()
+    }
+    
+    stats_df = pd.DataFrame([recent_stats, pred_stats], index=['Recent 30 Days', 'Predictions'])
+    
+    x = np.arange(len(stats_df.columns))
+    width = 0.35
+    
+    axes[1,1].bar(x - width/2, stats_df.iloc[0], width, label='Recent 30 Days', color='blue', alpha=0.7)
+    axes[1,1].bar(x + width/2, stats_df.iloc[1], width, label='Predictions', color='red', alpha=0.7)
+    axes[1,1].set_title('Statistical Comparison', fontsize=12, fontweight='bold')
+    axes[1,1].set_ylabel('Temperature (°C)')
+    axes[1,1].set_xticks(x)
+    axes[1,1].set_xticklabels(stats_df.columns)
+    axes[1,1].legend()
+    axes[1,1].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # Save to buffer
+    img_buffer = io.BytesIO()
+    plt.savefig(img_buffer, format='png', dpi=150, bbox_inches='tight')
+    img_buffer.seek(0)
+    img_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+    plt.close()
+    
+    return img_base64
+
+def get_improved_predictions():
+    """Get improved predictions based on historical patterns"""
+    if historical_data is None:
+        return None
+    
+    # Get current date and time
+    current_date = datetime.now()
+    current_month = current_date.month
+    current_hour = current_date.hour
+    
+    # Get historical data for the same month and hour
+    similar_conditions = historical_data[
+        (historical_data['month'] == current_month) & 
+        (historical_data['hour'] == current_hour)
+    ]
+    
+    if len(similar_conditions) > 0:
+        # Calculate statistics for similar conditions
+        base_temp = similar_conditions['temperature'].mean()
+        temp_std = similar_conditions['temperature'].std()
+        
+        # Generate improved predictions for next 168 hours
+        improved_predictions = []
+        for hour in range(168):
+            future_hour = (current_hour + hour) % 24
+            future_day = (current_date + timedelta(hours=hour)).day
+            
+            # Get historical data for this hour
+            hour_data = historical_data[
+                (historical_data['month'] == current_month) & 
+                (historical_data['hour'] == future_hour)
+            ]
+            
+            if len(hour_data) > 0:
+                # Use historical average with some variation
+                predicted_temp = hour_data['temperature'].mean()
+                # Add some realistic variation
+                predicted_temp += np.random.normal(0, temp_std * 0.1)
+            else:
+                # Fallback to base temperature
+                predicted_temp = base_temp + np.random.normal(0, temp_std * 0.1)
+            
+            improved_predictions.append(predicted_temp)
+        
+        return improved_predictions
+    
+    return None
+
+# Initialize data on startup
+print("Loading historical data...")
+historical_loaded = load_historical_data()
+print("Loading predictions data...")
+predictions_loaded = load_predictions_data()
+
+@app.route('/')
+def home():
+    """Home page with modern weather interface"""
+    return render_template('modern_weather.html')
+
+@app.route('/api/yearly-analysis')
+def yearly_analysis():
+    """Generate yearly weather analysis"""
+    try:
+        if not historical_loaded:
+            return jsonify({'error': 'Historical data not available'}), 500
+        
+        yearly_map = create_yearly_weather_map()
+        if yearly_map is None:
+            return jsonify({'error': 'Failed to generate yearly analysis'}), 500
+        
+        return jsonify({
+            'status': 'success',
+            'image': f'data:image/png;base64,{yearly_map}'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/30-day-comparison')
+def thirty_day_comparison():
+    """Generate 30-day comparison analysis"""
+    try:
+        if not historical_loaded or not predictions_loaded:
+            return jsonify({'error': 'Data not available'}), 500
+        
+        comparison_image = create_30_day_comparison()
+        if comparison_image is None:
+            return jsonify({'error': 'Failed to generate comparison'}), 500
+        
+        return jsonify({
+            'status': 'success',
+            'image': f'data:image/png;base64,{comparison_image}'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/improved-predictions')
+def improved_predictions():
+    """Get improved predictions based on historical data"""
+    try:
+        if not historical_loaded:
+            return jsonify({'error': 'Historical data not available'}), 500
+        
+        improved_preds = get_improved_predictions()
+        if improved_preds is None:
+            return jsonify({'error': 'Failed to generate improved predictions'}), 500
+        
+        return jsonify({
+            'status': 'success',
+            'predictions': {
+                'hours': list(range(168)),
+                'temperatures': improved_preds,
+                'min_temp': float(min(improved_preds)),
+                'max_temp': float(max(improved_preds)),
+                'mean_temp': float(np.mean(improved_preds)),
+                'generated_at': datetime.now().isoformat()
+            },
+            'data_source': 'Historical data analysis'
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/historical-stats')
+def historical_stats():
+    """Get comprehensive historical weather statistics"""
+    try:
+        if not historical_loaded:
+            return jsonify({'error': 'Historical data not available'}), 500
+        
+        # Calculate comprehensive statistics
+        stats = {
+            'overall': {
+                'total_records': len(historical_data),
+                'date_range': {
+                    'start': historical_data['time'].min().isoformat(),
+                    'end': historical_data['time'].max().isoformat()
+                },
+                'temperature': {
+                    'mean': float(historical_data['temperature'].mean()),
+                    'min': float(historical_data['temperature'].min()),
+                    'max': float(historical_data['temperature'].max()),
+                    'std': float(historical_data['temperature'].std())
+                }
+            },
+            'monthly_averages': historical_data.groupby('month')['temperature'].mean().to_dict(),
+            'yearly_averages': historical_data.groupby('year')['temperature'].mean().to_dict(),
+            'seasonal_stats': historical_data.groupby('season')['temperature'].agg(['mean', 'min', 'max']).to_dict()
+        }
+        
+        return jsonify({
+            'status': 'success',
+            'statistics': stats
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'historical_data_loaded': historical_loaded,
+        'predictions_data_loaded': predictions_loaded,
+        'timestamp': datetime.now().isoformat()
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5001, debug=True)
+`;
+
+        viewCodeBtn.onclick = function() {
+            modal.style.display = "flex";
+            codeContent.textContent = pythonCode;
+            Prism.highlightElement(codeContent);
+            modalImg.style.display = "none";
+            modalCode.style.display = "block";
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        modal.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

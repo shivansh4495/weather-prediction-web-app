@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noida Weather & AQI Forecast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary:#283593; --purple:#6A1B9A; --violet:#7b2cbf;
+            --border:#eaecf5; --card:#fff;
+        }
+        body {
+            font-family:'Poppins','Inter',sans-serif;
+            background:linear-gradient(135deg,var(--purple) 0%,var(--primary) 100%);
+            min-height:100vh; padding:32px 16px;
+        }
+        .container {
+            max-width:1240px; margin:0 auto;
+            background:var(--card); border-radius:20px;
+            box-shadow:0 12px 48px rgba(0,0,0,.25); overflow:hidden;
+        }
+
+        
+        .header {
+            padding:40px; text-align:center;
+            background:linear-gradient(160deg,#f3f0ff,#fff);
+            border-bottom:1px solid var(--border);
+        }
+        .current-temp { font-size:4.5rem; font-weight:700; color:var(--primary); line-height:1; }
+        .weather-desc { font-size:1.25rem; color:var(--violet); margin-top:8px; min-height:2rem; }
+        .location     { font-size:.9rem; color:#888; margin-top:4px; }
+        .badge-row    { margin-top:12px; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; }
+
+        .aqi-badge { display:inline-block; padding:6px 20px; border-radius:999px; font-size:.9rem; font-weight:600; }
+        .ml-badge  { padding:4px 12px; border-radius:999px; font-size:.75rem; font-weight:600; background:#e3f2fd; color:#1565c0; }
+        .gpu-badge { padding:4px 12px; border-radius:999px; font-size:.75rem; font-weight:600; background:#e8f5e9; color:#1b5e20; }
+
+        .aqi-good               { background:#e8f5e9; color:#2e7d32; }
+        .aqi-moderate           { background:#fff8e1; color:#f9a825; }
+        .aqi-unhealthy-sensitive{ background:#fff3e0; color:#ef6c00; }
+        .aqi-unhealthy          { background:#ffebee; color:#c62828; }
+        .aqi-very-unhealthy     { background:#f3e5f5; color:#6a1b9a; }
+        .aqi-hazardous          { background:#212121; color:#fff; }
+
+        .btn {
+            margin-top:20px;
+            background:linear-gradient(135deg,var(--violet),var(--primary));
+            color:#fff; border:none; padding:14px 32px;
+            border-radius:50px; font-size:1rem; font-weight:600;
+            cursor:pointer; transition:.3s; box-shadow:0 4px 18px rgba(106,27,154,.35);
+        }
+        .btn:hover     { transform:translateY(-3px); box-shadow:0 8px 28px rgba(106,27,154,.45); }
+        .btn:disabled  { opacity:.6; cursor:not-allowed; transform:none; }
+
+        
+        .stat-pills {
+            display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+            padding:22px 40px; background:#fafbff; border-bottom:1px solid var(--border);
+        }
+        .pill {
+            display:flex; align-items:center; gap:10px;
+            background:#fff; border:1px solid var(--border);
+            border-radius:14px; padding:14px 22px;
+            box-shadow:0 2px 8px rgba(0,0,0,.06); min-width:145px;
+        }
+        .pill-icon  { font-size:1.5rem; }
+        .pill-label { font-size:.68rem; color:#888; font-weight:500; }
+        .pill-value { font-size:1.1rem; font-weight:700; color:var(--primary); }
+
+        
+        .section { padding:36px 40px; border-bottom:1px solid var(--border); }
+        .section:last-child { border-bottom:none; }
+        .section-title { font-size:1.2rem; font-weight:600; color:var(--primary); margin-bottom:18px; }
+        #map { height:380px; width:100%; border-radius:14px; box-shadow:0 4px 16px rgba(0,0,0,.1); }
+
+        
+        .charts-grid {
+            display:grid; gap:20px; margin-bottom:24px;
+            grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+        }
+        .chart-card {
+            background:#fff; padding:22px; border-radius:14px;
+            box-shadow:0 4px 16px rgba(0,0,0,.08); height:300px;
+        }
+        .chart-card h4 { font-size:.92rem; font-weight:600; color:var(--primary); margin-bottom:14px; }
+        .chart-card canvas { max-height:240px; }
+
+        
+        .aqi-legend { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:24px; font-size:.74rem; }
+        .aqi-legend span { padding:4px 10px; border-radius:999px; font-weight:600; }
+
+        
+        .forecast-table {
+            width:100%; border-collapse:collapse; border-radius:14px;
+            overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.08);
+        }
+        .forecast-table thead { background:#f3f0ff; }
+        .forecast-table th {
+            padding:16px 14px; text-align:left;
+            font-weight:600; color:var(--primary);
+            font-size:.78rem; text-transform:uppercase; letter-spacing:.5px;
+        }
+        .forecast-table td {
+            padding:13px 14px; font-size:.88rem;
+            border-bottom:1px solid var(--border); vertical-align:middle;
+        }
+        .forecast-table tr:last-child td { border-bottom:none; }
+        .forecast-table tr:nth-child(even) { background:#fdfcff; }
+        .forecast-table tr:hover { background:#ede7f6; transition:.15s; }
+        .temp-high { color:#d32f2f; font-weight:600; }
+        .temp-low  { color:#1976d2; font-weight:600; }
+        .rain-yes  { color:#388e3c; font-weight:600; }
+        .rain-no   { color:#f57c00; font-weight:600; }
+        .weather-icon { font-size:1.4rem; text-align:center; }
+
+        
+        .spark-wrap  { display:flex; align-items:center; gap:8px; }
+        .spark-cat   { font-size:.78rem; font-weight:600; }
+        .sparkline   { height:28px; width:80px; }
+
+        
+        .analysis-btns { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; }
+        .analysis-btn {
+            background:#fff; color:var(--primary); border:2px solid var(--primary);
+            padding:10px 22px; border-radius:10px; font-weight:600;
+            cursor:pointer; transition:.25s; font-size:.88rem;
+        }
+        .analysis-btn:hover { background:var(--primary); color:#fff; }
+        #analysisResult { margin-top:20px; }
+        #analysisResult img { max-width:100%; border-radius:14px; box-shadow:0 4px 20px rgba(0,0,0,.15); }
+
+        
+        @media(max-width:768px){
+            body { padding:10px; }
+            .section, .stat-pills { padding:18px; }
+            .current-temp { font-size:3rem; }
+            .charts-grid  { grid-template-columns:1fr; }
+            .forecast-table th:nth-child(5),
+            .forecast-table td:nth-child(5) { display:none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    
+    <div class="header">
+        <div class="current-temp" id="currentTemp">--°C</div>
+        <div class="weather-desc" id="weatherDesc">Press the button to load today's forecast</div>
+        <div class="badge-row">
+            <span class="aqi-badge aqi-moderate" id="aqiBadge">AQI: --</span>
+            <span class="ml-badge"  id="mlBadge"  style="display:none">🤖 ML Powered</span>
+            <span class="gpu-badge" id="gpuBadge" style="display:none">⚡ GPU</span>
+        </div>
+        <div class="location">📍 Noida, Uttar Pradesh</div>
+        <button class="btn" id="fetchBtn">🌤️ Get Latest Forecast</button>
+    </div>
+
+    
+    <div class="stat-pills" id="statPills" style="display:none">
+        <div class="pill"><span class="pill-icon">🌡️</span>
+            <div><div class="pill-label">Min / Max Temp</div><div class="pill-value" id="pTempRange">--</div></div>
+        </div>
+        <div class="pill"><span class="pill-icon">💧</span>
+            <div><div class="pill-label">Avg Humidity</div><div class="pill-value" id="pHumidity">--%</div></div>
+        </div>
+        <div class="pill"><span class="pill-icon">💨</span>
+            <div><div class="pill-label">Avg Wind</div><div class="pill-value" id="pWind">-- km/h</div></div>
+        </div>
+        <div class="pill"><span class="pill-icon">🌫️</span>
+            <div><div class="pill-label">7-Day Avg AQI</div><div class="pill-value" id="pAqi">--</div></div>
+        </div>
+        <div class="pill"><span class="pill-icon">🌧️</span>
+            <div><div class="pill-label">Rain Days</div><div class="pill-value" id="pRain">-- / 7</div></div>
+        </div>
+    </div>
+
+    
+    <div class="section">
+        <div class="section-title">📍 Interactive Weather Map</div>
+        <div id="map"></div>
+    </div>
+
+    
+    <div id="weatherDetails" style="display:none">
+
+        
+        <div class="section">
+            <div class="section-title">📊 7-Day Hourly Forecast — All Parameters</div>
+            <div class="charts-grid">
+                <div class="chart-card"><h4>🌡️ Temperature (°C)</h4><canvas id="tempChart"></canvas></div>
+                <div class="chart-card"><h4>🌫️ Air Quality Index</h4><canvas id="aqiChart"></canvas></div>
+                <div class="chart-card"><h4>🌧️ Rainfall Probability (%)</h4><canvas id="rainChart"></canvas></div>
+                <div class="chart-card"><h4>💧 Humidity (%)</h4><canvas id="humChart"></canvas></div>
+                <div class="chart-card"><h4>💨 Wind Speed (km/h)</h4><canvas id="windChart"></canvas></div>
+            </div>
+            <div class="aqi-legend">
+                <span class="aqi-good">0–50 Good</span>
+                <span class="aqi-moderate">51–100 Moderate</span>
+                <span class="aqi-unhealthy-sensitive">101–150 Sensitive</span>
+                <span class="aqi-unhealthy">151–200 Unhealthy</span>
+                <span class="aqi-very-unhealthy">201–300 Very Unhealthy</span>
+                <span class="aqi-hazardous">301+ Hazardous</span>
+            </div>
+        </div>
+
+        
+        <div class="section">
+            <div class="section-title">🗓️ 7-Day Forecast</div>
+            <table class="forecast-table">
+                <thead><tr>
+                    <th>📅 Date</th>
+                    <th>🌡️ Temp</th>
+                    <th>🌧️ Rain</th>
+                    <th>🌫️ AQI</th>
+                    <th>AQI Trend (24h)</th>
+                    <th style="text-align:center">🌤️</th>
+                </tr></thead>
+                <tbody id="forecastBody"></tbody>
+            </table>
+        </div>
+
+       
+        <div class="section">
+            <div class="section-title">🔬 Historical Analysis</div>
+            <div class="analysis-btns">
+                <button class="analysis-btn" onclick="loadAnalysis('yearly')">📅 Yearly Analysis</button>
+                <button class="analysis-btn" onclick="loadAnalysis('30day')">📊 30-Day Comparison</button>
+            </div>
+            <div id="analysisResult"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+function aqiClass(v){
+    if(v<=50)  return 'aqi-good';
+    if(v<=100) return 'aqi-moderate';
+    if(v<=150) return 'aqi-unhealthy-sensitive';
+    if(v<=200) return 'aqi-unhealthy';
+    if(v<=300) return 'aqi-very-unhealthy';
+    return 'aqi-hazardous';
+}
+function aqiColor(v){
+    if(v<=50)  return '#2e7d32';
+    if(v<=100) return '#f9a825';
+    if(v<=150) return '#ef6c00';
+    if(v<=200) return '#c62828';
+    if(v<=300) return '#6a1b9a';
+    return '#212121';
+}
+
+
+function initMap(){
+    const m=L.map('map').setView([28.5355,77.3910],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {attribution:'© OpenStreetMap contributors'}).addTo(m);
+    L.marker([28.5355,77.3910]).addTo(m)
+     .bindPopup('<b>Noida, Uttar Pradesh</b><br>AI-powered Weather & AQI Forecast').openPopup();
+}
+
+
+const _charts={};
+function mkChart(id,cfg){
+    if(_charts[id]) _charts[id].destroy();
+    _charts[id]=new Chart(document.getElementById(id).getContext('2d'),cfg);
+}
+function baseOpts(unit,yMin,yMax){
+    const o={
+        responsive:true, maintainAspectRatio:false, animation:{duration:700},
+        plugins:{legend:{display:false}},
+        elements:{point:{radius:0}},
+        scales:{
+            x:{ticks:{maxTicksLimit:8,font:{size:10}},grid:{display:false}},
+            y:{ticks:{callback:v=>v+unit,font:{size:10}},grid:{color:'rgba(0,0,0,.05)'}}
+        }
+    };
+    if(yMin!=null) o.scales.y.min=yMin;
+    if(yMax!=null) o.scales.y.max=yMax;
+    return o;
+}
+
+function buildTempChart(lbl,data){
+    const mn=Math.floor(Math.min(...data)-2), mx=Math.ceil(Math.max(...data)+2);
+    mkChart('tempChart',{type:'line',data:{labels:lbl,datasets:[{data,fill:true,
+        backgroundColor:'rgba(40,53,147,.1)',borderColor:'#283593',borderWidth:2.5,tension:0.4}]},
+        options:baseOpts('°C',mn,mx)});
+}
+function buildAqiChart(lbl,data){
+    const mn=Math.max(0,Math.min(...data)-10), mx=Math.min(500,Math.max(...data)+20);
+    mkChart('aqiChart',{type:'line',data:{labels:lbl,datasets:[{data,fill:true,
+        backgroundColor:'rgba(123,44,191,.1)',borderColor:'#7b2cbf',borderWidth:2.5,tension:0.35,
+        pointBackgroundColor:data.map(aqiColor),pointRadius:0,pointHoverRadius:4}]},
+        options:baseOpts('',mn,mx)});
+}
+function buildRainChart(lbl,data){
+    mkChart('rainChart',{type:'bar',data:{labels:lbl,datasets:[{data,
+        backgroundColor:data.map(v=>v>=45?'rgba(56,142,60,.75)':'rgba(245,124,0,.65)'),
+        borderRadius:3,borderSkipped:false}]},
+        options:baseOpts('%',0,100)});
+}
+function buildHumChart(lbl,data){
+    const mn=Math.max(0,Math.min(...data)-5), mx=Math.min(100,Math.max(...data)+5);
+    mkChart('humChart',{type:'line',data:{labels:lbl,datasets:[{data,fill:true,
+        backgroundColor:'rgba(2,136,209,.1)',borderColor:'#0288d1',borderWidth:2.5,tension:0.4}]},
+        options:baseOpts('%',mn,mx)});
+}
+function buildWindChart(lbl,data){
+    const mx=Math.ceil(Math.max(...data)+5);
+    mkChart('windChart',{type:'line',data:{labels:lbl,datasets:[{data,fill:true,
+        backgroundColor:'rgba(0,150,136,.1)',borderColor:'#00897b',borderWidth:2.5,tension:0.4}]},
+        options:baseOpts(' km/h',0,mx)});
+}
+
+
+const _sparks=[];
+function destroySparks(){ _sparks.forEach(c=>c.destroy()); _sparks.length=0; }
+function buildSparkline(canvas,vals){
+    _sparks.push(new Chart(canvas.getContext('2d'),{
+        type:'line',
+        data:{labels:vals.map((_,i)=>i),datasets:[{data:vals,
+            borderColor:'#7b2cbf',borderWidth:1.5,fill:false,tension:0.4,pointRadius:0}]},
+        options:{animation:false,responsive:false,
+            plugins:{legend:{display:false},tooltip:{enabled:false}},
+            scales:{x:{display:false},y:{display:false}}}
+    }));
+}
+
+
+function buildTable(forecast, hourlyAqis){
+    destroySparks();
+    const tbody=document.getElementById('forecastBody');
+    tbody.innerHTML='';
+    forecast.forEach((day,i)=>{
+        const tc=day.temperature>32?'temp-high':'temp-low';
+        const rc=day.rainfall==='Yes'?'rain-yes':'rain-no';
+        const icon=day.rainfall==='Yes'?'🌧️':day.aqi>150?'😷':'☀️';
+        const dateStr=new Date(day.date).toLocaleDateString('en-IN',
+            {weekday:'long',month:'short',day:'numeric'});
+        const rainStr=`${day.rainfall} (${Math.round(day.rain_probability)}%)`;
+        const cid=`spk_${i}`;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td>${dateStr}</td>
+          <td class="${tc}">${day.temperature.toFixed(1)}°C</td>
+          <td class="${rc}">${rainStr}</td>
+          <td style="font-weight:700;color:${aqiColor(day.aqi)}">${day.aqi}</td>
+          <td>
+            <div class="spark-wrap">
+              <canvas id="${cid}" class="sparkline" width="80" height="28"></canvas>
+              <span class="spark-cat ${aqiClass(day.aqi)}" style="padding:3px 8px;border-radius:999px">
+                ${day.aqi_category}
+              </span>
+            </div>
+          </td>
+          <td class="weather-icon">${icon}</td>`;
+        tbody.appendChild(tr);
+        const slice=hourlyAqis?hourlyAqis.slice(i*24,i*24+24):Array(24).fill(day.aqi);
+        requestAnimationFrame(()=>{ const c=document.getElementById(cid); if(c) buildSparkline(c,slice); });
+    });
+}
+
+
+function updatePills(forecast, hourly){
+    const temps=forecast.map(d=>d.temperature);
+    const aqis =forecast.map(d=>d.aqi);
+    const rains=forecast.filter(d=>d.rainfall==='Yes').length;
+    document.getElementById('pTempRange').textContent=
+        `${Math.min(...temps).toFixed(0)}° / ${Math.max(...temps).toFixed(0)}°C`;
+    document.getElementById('pAqi').textContent=
+        Math.round(aqis.reduce((a,b)=>a+b,0)/aqis.length).toString();
+    document.getElementById('pRain').textContent=`${rains} / 7`;
+    if(hourly){
+        const avgH=hourly.humidities.reduce((a,b)=>a+b,0)/hourly.humidities.length;
+        const avgW=hourly.wind_speeds.reduce((a,b)=>a+b,0)/hourly.wind_speeds.length;
+        document.getElementById('pHumidity').textContent=`${Math.round(avgH)}%`;
+        document.getElementById('pWind').textContent=`${avgW.toFixed(1)} km/h`;
+    }
+    document.getElementById('statPills').style.display='flex';
+}
+
+
+function updateHeader(fc,ml,compute){
+    const d=fc[0];
+    document.getElementById('currentTemp').textContent=`${Math.round(d.temperature)}°C`;
+    document.getElementById('weatherDesc').textContent=
+        d.rainfall==='Yes' ? 'Rainy conditions expected today'
+        : d.aqi>150        ? 'Clear skies — but poor air quality'
+        : 'Clear and sunny — enjoy the day!';
+    const ab=document.getElementById('aqiBadge');
+    ab.textContent=`AQI: ${d.aqi} — ${d.aqi_category}`;
+    ab.className=`aqi-badge ${aqiClass(d.aqi)}`;
+    document.getElementById('mlBadge').style.display=ml?'inline-block':'none';
+    const gpuEl=document.getElementById('gpuBadge');
+    if(compute&&compute.includes('GPU')){
+        gpuEl.style.display='inline-block';
+        gpuEl.textContent=`⚡ ${compute}`;
+    } else { gpuEl.style.display='none'; }
+}
+
+
+function fallbackForecast(){
+    const today=new Date();
+    return Array.from({length:7},(_,i)=>{
+        const d=new Date(today); d.setDate(today.getDate()+i);
+        const t=Math.max(25,Math.min(43,Math.round(31+Math.random()*4-2+i*.3)));
+        const rp=Math.random()>.6?72:18;
+        const aqi=Math.round(115+(Math.random()*20-10));
+        return {date:d.toISOString().split('T')[0],temperature:t,
+                rainfall:rp>=45?'Yes':'No',rain_probability:rp,
+                aqi,aqi_category:aqi<=100?'Moderate':'Unhealthy for Sensitive'};
+    });
+}
+function fallbackHourly(fc){
+    const labels=[],temps=[],aqis=[],hums=[],winds=[];
+    const now=new Date();
+    for(let h=0;h<168;h++){
+        const dt=new Date(now); dt.setHours(now.getHours()+h);
+        labels.push(dt.toLocaleString('en-IN',{month:'short',day:'numeric',hour:'2-digit',hour12:false}));
+        const day=fc[Math.floor(h/24)];
+        temps.push(+(day.temperature+2.8*Math.sin((h%24-6)/24*2*Math.PI)).toFixed(1));
+        aqis.push(Math.round(day.aqi+4*Math.cos(h/2.2)));
+        hums.push(Math.round(65+10*Math.sin(h/3.5)));
+        winds.push(+(10+2*Math.cos(h/4)).toFixed(1));
+    }
+    return {labels,temperatures:temps,aqis,humidities:hums,wind_speeds:winds};
+}
+
+
+async function fetchAndDisplay(){
+    const btn=document.getElementById('fetchBtn');
+    btn.disabled=true; btn.textContent='⏳ Loading…';
+    try{
+       
+        const r1=await fetch('/api/noida-weather');
+        const d1=await r1.json();
+        const fc     =d1.status==='success'?d1.forecast:fallbackForecast();
+        const mlOn   =d1.ml_powered||false;
+        const compute=d1.compute_backend||'';
+
+        
+        let hourly=null;
+        try{
+            const r2=await fetch('/api/hourly-forecast');
+            const d2=await r2.json();
+            if(d2.status==='success') hourly=d2;
+        }catch(_){}
+        if(!hourly) hourly=fallbackHourly(fc);
+
+        
+        const S=6;
+        const lbl=hourly.labels.filter((_,i)=>i%S===0);
+        const t6 =hourly.temperatures.filter((_,i)=>i%S===0);
+        const a6 =hourly.aqis.filter((_,i)=>i%S===0);
+        const h6 =hourly.humidities.filter((_,i)=>i%S===0);
+        const w6 =hourly.wind_speeds.filter((_,i)=>i%S===0);
+
+        updateHeader(fc,mlOn,compute);
+        updatePills(fc,hourly);
+        document.getElementById('weatherDetails').style.display='block';
+
+        buildTempChart(lbl,t6);
+        buildAqiChart(lbl,a6);
+        buildRainChart(fc.map(d=>d.date),fc.map(d=>d.rain_probability));
+        buildHumChart(lbl,h6);
+        buildWindChart(lbl,w6);
+        buildTable(fc,hourly.aqis);
+
+    }catch(err){
+        console.error(err);
+        const fb=fallbackForecast(), fh=fallbackHourly(fb);
+        updateHeader(fb,false,'CPU');
+        updatePills(fb,fh);
+        document.getElementById('weatherDetails').style.display='block';
+        document.getElementById('weatherDesc').textContent='Live API unavailable — showing estimated forecast';
+        const S=6, lbl=fh.labels.filter((_,i)=>i%S===0);
+        buildTempChart(lbl,fh.temperatures.filter((_,i)=>i%S===0));
+        buildAqiChart(lbl,fh.aqis.filter((_,i)=>i%S===0));
+        buildRainChart(fb.map(d=>d.date),fb.map(d=>d.rain_probability));
+        buildHumChart(lbl,fh.humidities.filter((_,i)=>i%S===0));
+        buildWindChart(lbl,fh.wind_speeds.filter((_,i)=>i%S===0));
+        buildTable(fb,fh.aqis);
+    }finally{
+        btn.disabled=false; btn.textContent='🌤️ Get Latest Forecast';
+    }
+}
+
+async function loadAnalysis(type){
+    const el=document.getElementById('analysisResult');
+    el.innerHTML='<p style="color:#555;margin-top:14px">⏳ Generating chart…</p>';
+    try{
+        const r=await fetch(type==='yearly'?'/api/yearly-analysis':'/api/30-day-comparison');
+        const d=await r.json();
+        el.innerHTML=d.status==='success'
+            ?`<img src="${d.image}" alt="${type} analysis" style="margin-top:16px">`
+            :`<p style="color:red;margin-top:12px">Error: ${d.error}</p>`;
+    }catch(e){ el.innerHTML='<p style="color:red;margin-top:12px">Failed to load.</p>'; }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    initMap();
+    document.getElementById('fetchBtn').addEventListener('click',fetchAndDisplay);
+});
+</script>
+</body>
+</html>

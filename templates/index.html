@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecasting App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .chart-container {
+            margin: 20px 0;
+            height: 400px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin: 0 10px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Weather Forecasting System</h1>
+        <div style="text-align: center; margin-bottom: 20px; padding: 10px; background-color: #e7f3ff; border-radius: 5px; border: 1px solid #b3d9ff;">
+            <p style="margin: 0; color: #0066cc; font-weight: bold;">📍 This model is trained specifically for Noida, India and nearby areas</p>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Available locations: Noida, Delhi, New Delhi, Gurgaon, Gurugram</p>
+        </div>
+        
+        <div class="controls">
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="locationInput" placeholder="Enter location (e.g., Noida, Delhi, Gurgaon)" 
+                       style="padding: 10px; width: 300px; margin-right: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <button onclick="generatePrediction()">Get Weather Forecast</button>
+            </div>
+            <div>
+                <button onclick="loadExistingPredictions()">Load Existing Predictions</button>
+                <button onclick="showVisualization()">Show Visualization</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Loading predictions...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="stats" class="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="minTemp">--</div>
+                <div class="stat-label">Min Temperature (°C)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="maxTemp">--</div>
+                <div class="stat-label">Max Temperature (°C)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgTemp">--</div>
+                <div class="stat-label">Average Temperature (°C)</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="temperatureChart"></canvas>
+        </div>
+
+        <div id="visualization" style="display: none; text-align: center;">
+            <h3>Temperature Forecast Visualization</h3>
+            <img id="visualizationImage" src="" alt="Temperature Forecast" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function updateStats(forecast) {
+            if (forecast.min_temp !== undefined) {
+                document.getElementById('minTemp').textContent = forecast.min_temp.toFixed(1);
+                document.getElementById('maxTemp').textContent = forecast.max_temp.toFixed(1);
+                document.getElementById('avgTemp').textContent = forecast.mean_temp.toFixed(1);
+                document.getElementById('stats').style.display = 'flex';
+            }
+        }
+
+        function createChart(hours, temperatures) {
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: temperatures,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Temperature Forecast (Next 168 Hours)'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Hours'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function generatePrediction() {
+            const locationInput = document.getElementById('locationInput');
+            const location = locationInput.value.trim();
+            
+            if (!location) {
+                showError('Please enter a location');
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ location: location })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const forecast = data.forecast;
+                    createChart(forecast.hours, forecast.temperatures);
+                    updateStats(forecast);
+                    
+                    
+                    if (chart) {
+                        chart.options.plugins.title.text = `Temperature Forecast for ${data.location} (Next 168 Hours)`;
+                        chart.update();
+                    }
+                    
+                    
+                    displayCurrentWeather(data.current_weather);
+                    
+                    document.getElementById('visualization').style.display = 'none';
+                } else {
+                    showError(data.error || 'Error generating prediction');
+                }
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function displayCurrentWeather(weather) {
+            
+            console.log('Current weather:', weather);
+        }
+        
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const locationInput = document.getElementById('locationInput');
+            locationInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    generatePrediction();
+                }
+            });
+        });
+
+        async function loadExistingPredictions() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/predictions');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const predictions = data.predictions;
+                    createChart(predictions.hours, predictions.temperatures);
+                    document.getElementById('visualization').style.display = 'none';
+                    document.getElementById('stats').style.display = 'none';
+                } else {
+                    showError(data.error || 'Error loading predictions');
+                }
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function showVisualization() {
+            showLoading(true);
+            try {
+                const response = await fetch('/api/visualization');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('visualizationImage').src = data.image;
+                    document.getElementById('visualization').style.display = 'block';
+                    if (chart) {
+                        chart.destroy();
+                        chart = null;
+                    }
+                } else {
+                    showError(data.error || 'Error generating visualization');
+                }
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        
+        window.addEventListener('load', loadExistingPredictions);
+    </script>
+</body>
+</html>
